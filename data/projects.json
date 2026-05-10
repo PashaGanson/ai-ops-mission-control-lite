@@ -1,0 +1,5 @@
+[
+  {"id":"proj-ai-reporting","name":"AI Reporting Pipeline","description":"Turn CRM exports into weekly founder-ready reports","status":"active","color":"#60a5fa"},
+  {"id":"proj-concierge","name":"Concierge Workflow","description":"Escalation and approval flow for external requests","status":"active","color":"#34d399"},
+  {"id":"proj-founder-brand","name":"Founder Brand","description":"Public artifacts, posts, and project demos","status":"active","color":"#f59e0b"}
+]

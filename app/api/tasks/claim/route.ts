@@ -1,0 +1,3 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { TASKS_FILE, readJsonFile, writeJsonFile, appendActivity } from '../../_data'
+export async function POST(req: NextRequest) { const { agentId }=await req.json(); if(!agentId) return NextResponse.json({error:'agentId required'},{status:400}); const tasks=readJsonFile<Record<string, unknown>[]>(TASKS_FILE, []); const task=tasks.find(t=>t.status==='backlog' && t.assignee===agentId); if(!task) return NextResponse.json({claimed:false,message:'No backlog tasks'}); task.status='in_progress'; task.updated_at=new Date().toISOString(); writeJsonFile(TASKS_FILE,tasks); appendActivity({agent:agentId,event:`claimed task "${task.title}"`,type:'task_claim'}); return NextResponse.json({claimed:true,task}) }

@@ -1,0 +1,4 @@
+{"agent":"system","event":"Mission Control Lite bootstrapped with demo data","type":"system","time":"09:00","timestamp":"2026-05-10T09:00:00.000Z"}
+{"agent":"reporting-agent","event":"Generate weekly sales report → In progress","type":"task_move","time":"09:12","timestamp":"2026-05-10T09:12:00.000Z"}
+{"agent":"operator","event":"Review demo customer support escalation → Review","type":"task_move","time":"09:24","timestamp":"2026-05-10T09:24:00.000Z"}
+{"agent":"data-agent","event":"Clean sample CRM dataset → Done","type":"task_move","time":"09:40","timestamp":"2026-05-10T09:40:00.000Z"}

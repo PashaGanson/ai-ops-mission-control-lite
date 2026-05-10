@@ -1,0 +1,6 @@
+[
+  {"id":"task-001","title":"Generate weekly sales report","description":"Run the reporting pipeline on sample CRM data and review founder notes.","status":"in_progress","assignee":"reporting-agent","project_id":"proj-ai-reporting","created_at":"2026-05-10T08:00:00.000Z","updated_at":"2026-05-10T09:12:00.000Z"},
+  {"id":"task-002","title":"Review demo customer support escalation","description":"Human approval is required before an external reply is sent.","status":"review","assignee":"operator","project_id":"proj-concierge","created_at":"2026-05-10T08:30:00.000Z","updated_at":"2026-05-10T09:24:00.000Z"},
+  {"id":"task-003","title":"Draft LinkedIn project post","description":"Prepare a public post with screenshot and repository link.","status":"backlog","assignee":"content-agent","project_id":"proj-founder-brand","created_at":"2026-05-10T08:45:00.000Z","updated_at":"2026-05-10T08:45:00.000Z"},
+  {"id":"task-004","title":"Clean sample CRM dataset","description":"Remove private fields and keep only demo-safe input columns.","status":"done","assignee":"data-agent","project_id":"proj-ai-reporting","created_at":"2026-05-10T07:30:00.000Z","updated_at":"2026-05-10T09:40:00.000Z","result":"Sample data is safe for public demo use."}
+]
