@@ -1,27 +1,14 @@
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
 import { copyFile, mkdtemp, readFile, rm } from 'node:fs/promises'
-import net from 'node:net'
+import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
 
 const root = process.cwd()
-const dataDir = await mkdtemp(path.join(os.tmpdir(), 'mission-control-lite-'))
-const logs = []
-
-async function reservePort() {
-  const server = net.createServer()
-  await new Promise((resolve, reject) => {
-    server.once('error', reject)
-    server.listen(0, '127.0.0.1', resolve)
-  })
-  const address = server.address()
-  assert(address && typeof address === 'object')
-  const { port } = address
-  await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))
-  return port
-}
+let dataDir
+let app
+let server
 
 async function request(url, init) {
   const response = await fetch(url, init)
@@ -29,42 +16,37 @@ async function request(url, init) {
   return { response, body }
 }
 
-for (const file of ['tasks.json', 'projects.json', 'activity.jsonl']) {
-  await copyFile(path.join(root, 'data', file), path.join(dataDir, file))
-}
-
-const port = await reservePort()
-const nextBin = path.join(root, 'node_modules', 'next', 'dist', 'bin', 'next')
-const child = spawn(process.execPath, [nextBin, 'start', '--hostname', '127.0.0.1', '--port', String(port)], {
-  cwd: root,
-  env: {
-    ...process.env,
-    MISSION_CONTROL_DATA_DIR: dataDir,
-    NEXT_TELEMETRY_DISABLED: '1',
-  },
-  stdio: ['ignore', 'pipe', 'pipe'],
-})
-
-child.stdout.on('data', (chunk) => logs.push(chunk.toString()))
-child.stderr.on('data', (chunk) => logs.push(chunk.toString()))
-
 try {
-  const baseUrl = `http://127.0.0.1:${port}`
-  let tasks
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    try {
-      const result = await request(`${baseUrl}/api/tasks`)
-      if (result.response.ok) {
-        tasks = result.body
-        break
-      }
-    } catch {
-      // The isolated server may still be starting.
-    }
-    await new Promise((resolve) => setTimeout(resolve, 250))
+  dataDir = await mkdtemp(path.join(os.tmpdir(), 'mission-control-lite-'))
+  for (const file of ['tasks.json', 'projects.json', 'activity.jsonl']) {
+    await copyFile(path.join(root, 'data', file), path.join(dataDir, file))
   }
 
-  assert(Array.isArray(tasks), `server did not become ready\n${logs.join('')}`)
+  process.env.MISSION_CONTROL_DATA_DIR = dataDir
+  process.env.NEXT_TELEMETRY_DISABLED = '1'
+  const next = (await import('next')).default
+  app = next({ dev: false, dir: root, hostname: '127.0.0.1', port: 0 })
+  await app.prepare()
+  const handler = app.getRequestHandler()
+  server = http.createServer((request, response) => {
+    handler(request, response).catch((error) => {
+      response.statusCode = 500
+      response.end('Synthetic server error')
+      console.error(error)
+    })
+  })
+  await new Promise((resolve, reject) => {
+    server.once('error', reject)
+    server.listen(0, '127.0.0.1', resolve)
+  })
+  const address = server.address()
+  assert(address && typeof address === 'object')
+  const port = address.port
+  const baseUrl = `http://127.0.0.1:${port}`
+  const initial = await request(`${baseUrl}/api/tasks`)
+  assert.equal(initial.response.status, 200)
+  const tasks = initial.body
+  assert(Array.isArray(tasks), 'task API did not return an array')
   assert(tasks.length > 0, 'sample task list is empty')
 
   const title = `Synthetic portability task ${process.pid}`
@@ -104,11 +86,10 @@ try {
   assert(!originalTasks.some((task) => task.title === title), 'smoke modified tracked sample data')
   console.log('Verified local task CRUD, no-delivery ping, activity readback, and isolated data writes.')
 } finally {
-  child.kill()
-  await new Promise((resolve) => {
-    if (child.exitCode !== null) return resolve()
-    child.once('exit', resolve)
-    setTimeout(resolve, 5_000).unref()
-  })
-  await rm(dataDir, { recursive: true, force: true })
+  if (server) {
+    server.closeAllConnections()
+    await new Promise((resolve) => server.close(resolve))
+  }
+  if (app) await app.close()
+  if (dataDir) await rm(dataDir, { recursive: true, force: true })
 }

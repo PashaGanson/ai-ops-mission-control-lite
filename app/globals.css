@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Angela dashboard animations */
+/* Dashboard animations */
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
