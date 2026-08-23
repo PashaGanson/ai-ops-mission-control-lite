@@ -34,8 +34,10 @@ This repository keeps the real Next.js UI structure and local JSON workflow, but
 
 ## Quick start
 
+Requires Node.js 24.19.x and npm 11.17.x.
+
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -60,6 +62,21 @@ data/tasks.json
 data/projects.json
 data/activity.jsonl
 ```
+
+The development and production scripts bind to `127.0.0.1`. The write APIs
+have no user authentication because this is a local synthetic demo. Do not
+publish the server directly; add an explicit authentication and storage
+boundary before any real deployment.
+
+Run the complete local verification gate with:
+
+```bash
+npm run verify
+```
+
+It lints, checks dependency advisories, builds the production app and runs an
+isolated API smoke against a temporary copy of the sample data. The smoke never
+sends a message to an agent or changes the tracked JSON files.
 
 ## Why this exists
 

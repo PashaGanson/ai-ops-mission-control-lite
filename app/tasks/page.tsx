@@ -20,11 +20,11 @@ const COLUMNS = [
 ];
 
 const SEED_TASKS = [
-  { title: 'Container 1: Bootstrap', status: 'done', assignee: 'tolik', description: 'Next.js каркас с темой и навигацией', project_id: '1' },
-  { title: 'Container 2: API Layer', status: 'done', assignee: 'tolik', description: 'All API endpoints', project_id: '1' },
+  { title: 'Bootstrap the local demo', status: 'done', assignee: 'operator', description: 'Prepare the synthetic task board and sample data.', project_id: 'proj-concierge' },
+  { title: 'Verify the local API layer', status: 'done', assignee: 'data-agent', description: 'Exercise local-only task and activity endpoints.', project_id: 'proj-ai-reporting' },
   { title: 'Demo task: Build Kanban board', status: 'in_progress', assignee: 'reporting-agent', description: 'Task board page with status columns', project_id: 'proj-ai-reporting' },
-  { title: 'Container 4: Календарь', status: 'backlog', assignee: 'tolik', description: 'Визуализация кронов', project_id: '1' },
-  { title: 'Container 5: Projectы', status: 'backlog', assignee: 'tolik', description: 'Карточки проектов', project_id: '1' },
+  { title: 'Review the synthetic workflow', status: 'backlog', assignee: 'operator', description: 'Confirm that no real customer or routing data is present.', project_id: 'proj-concierge' },
+  { title: 'Draft a public demo note', status: 'backlog', assignee: 'content-agent', description: 'Explain the local-only workflow and its limits.', project_id: 'proj-founder-brand' },
 ];
 
 export default function TasksPage() {
@@ -34,6 +34,7 @@ export default function TasksPage() {
   const [filterProject, setFilterProject] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [showModal, setShowModal] = useState(false);
+  const [referenceTime, setReferenceTime] = useState<number | null>(null);
 
   const [detailTask, setDetailTask] = useState<Task | null>(null);
   const [pingTask, setPingTask] = useState<Task | null>(null);
@@ -163,6 +164,7 @@ export default function TasksPage() {
       } else {
         setTasks(data);
       }
+      setReferenceTime(Date.now());
     };
     init();
 
@@ -170,6 +172,7 @@ export default function TasksPage() {
     const interval = setInterval(async () => {
       const refreshed = await fetchTasks();
       setTasks(refreshed);
+      setReferenceTime(Date.now());
     }, 10000);
     return () => clearInterval(interval);
   }, [fetchTasks, fetchProjects, seedTasks]);
@@ -274,8 +277,8 @@ export default function TasksPage() {
   });
 
   // Stats
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const thisWeek = filtered.filter(t => new Date(t.created_at).getTime() > weekAgo).length;
+  const weekAgo = referenceTime === null ? null : referenceTime - 7 * 24 * 60 * 60 * 1000;
+  const thisWeek = weekAgo === null ? 0 : filtered.filter(t => new Date(t.created_at).getTime() > weekAgo).length;
   const inProgress = filtered.filter(t => t.status === 'in_progress').length;
   const total = filtered.length;
   const done = filtered.filter(t => t.status === 'done').length;
